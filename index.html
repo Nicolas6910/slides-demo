@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>M1 · Comprendre l'IA et le paysage Claude — démo animée</title>
+<meta name="description" content="Version de démonstration animée du module 1 du Parcours Opérateurs (The Shift AI).">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#1e3a8a; --accent:#2563eb; --violet:#7c3aed;
+  --ink:#0f172a; --muted:#475569; --soft:#64748b;
+  --line:#e2e8f0; --surface:#ffffff; --bg:#f7f9fd;
+  --grad:linear-gradient(120deg,#1e3a8a 0%,#2563eb 45%,#7c3aed 100%);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:#0a0f1c;
+  font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;}
+body{display:flex;align-items:center;justify-content:center;cursor:default}
+body.hide-cursor{cursor:none}
+
+/* ---------- scène 16:9 mise à l'échelle ---------- */
+#viewport{position:fixed;inset:0;overflow:hidden}
+#stage{position:absolute;left:50%;top:50%;width:1280px;height:720px;transform-origin:50% 50%;
+  background:var(--bg);border-radius:18px;overflow:hidden;
+  box-shadow:0 40px 120px rgba(2,6,23,.55),0 0 0 1px rgba(148,163,184,.25);}
+@media (display-mode:fullscreen){#stage{border-radius:0}}
+
+/* ---------- décor ---------- */
+.blob{position:absolute;border-radius:50%;filter:blur(70px);opacity:.30;pointer-events:none}
+.blob.b1{width:520px;height:520px;background:radial-gradient(circle,#60a5fa,rgba(96,165,250,0));left:-160px;top:-180px}
+.blob.b2{width:560px;height:560px;background:radial-gradient(circle,#a78bfa,rgba(167,139,250,0));right:-200px;bottom:-220px}
+.blob.b3{width:380px;height:380px;background:radial-gradient(circle,#38bdf8,rgba(56,189,248,0));right:180px;top:-200px;opacity:.22}
+#grid-bg{position:absolute;inset:0;pointer-events:none;opacity:.5;
+  background-image:linear-gradient(rgba(37,99,235,.055) 1px,transparent 1px),linear-gradient(90deg,rgba(37,99,235,.055) 1px,transparent 1px);
+  background-size:56px 56px;
+  -webkit-mask-image:radial-gradient(ellipse 80% 70% at 50% 45%,#000 30%,transparent 100%);
+  mask-image:radial-gradient(ellipse 80% 70% at 50% 45%,#000 30%,transparent 100%)}
+
+/* ---------- marque ---------- */
+.brand{position:absolute;right:38px;top:30px;display:flex;align-items:center;gap:9px;z-index:6}
+.brand svg{width:26px;height:26px}
+.brand span{font-size:15px;font-weight:700;letter-spacing:-.01em;color:#334155}
+.brand span i{font-style:normal;color:var(--violet)}
+
+/* ---------- slides ---------- */
+#deck{position:absolute;inset:0}
+.slide{position:absolute;inset:0;padding:78px 92px 96px;display:none;
+  flex-direction:column;justify-content:center;opacity:0}
+.slide.active{display:flex}
+.slide.lead{align-items:center;text-align:center;justify-content:center}
+
+.kicker{display:inline-flex;align-items:center;gap:10px;align-self:flex-start;
+  font-size:14px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);
+  background:rgba(37,99,235,.09);border:1px solid rgba(37,99,235,.18);
+  padding:7px 15px;border-radius:999px;margin-bottom:22px}
+.slide.lead .kicker{align-self:center}
+
+h1{font-size:68px;line-height:1.05;font-weight:900;letter-spacing:-.035em;
+  background:var(--grad);-webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;color:transparent;padding-bottom:6px}
+h2{font-size:50px;line-height:1.1;font-weight:800;letter-spacing:-.03em;color:var(--navy);margin-bottom:30px}
+.slide.lead h2{font-size:58px;background:var(--grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent}
+h3{font-size:28px;font-weight:700;color:var(--navy);letter-spacing:-.02em}
+p.body{font-size:27px;line-height:1.55;color:#334155;max-width:1000px;margin-bottom:20px}
+p.body.big{font-size:32px}
+p.sub{font-size:24px;color:var(--soft);line-height:1.5}
+.slide.lead p.sub{font-size:26px;margin-top:20px}
+strong{font-weight:800;color:var(--navy)}
+em{font-style:italic;color:var(--violet);font-weight:600}
+.punch{font-size:44px;font-weight:900;letter-spacing:-.03em;line-height:1.2;
+  background:var(--grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+
+ul.bullets{list-style:none;display:flex;flex-direction:column;gap:18px;margin-top:6px}
+ul.bullets li{font-size:26px;line-height:1.45;color:#334155;display:flex;gap:16px;align-items:flex-start}
+ul.bullets li::before{content:"";flex:0 0 10px;width:10px;height:10px;margin-top:14px;border-radius:50%;background:var(--grad)}
+
+/* ---------- cartes & schémas ---------- */
+.schema{margin:14px 0 22px}
+.row{display:flex;gap:20px;align-items:stretch}
+.card{flex:1;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:24px 24px 26px;
+  box-shadow:0 10px 30px rgba(15,23,42,.06);position:relative;overflow:hidden}
+.card .tag{font-size:13px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:10px;display:block}
+.card .ttl{font-size:24px;font-weight:800;color:var(--navy);margin-bottom:8px;letter-spacing:-.02em}
+.card .txt{font-size:19px;line-height:1.45;color:var(--soft)}
+.card.hl{border-color:rgba(124,58,237,.45);box-shadow:0 18px 44px rgba(124,58,237,.20)}
+.card.hl::after{content:"";position:absolute;inset:0;border-radius:18px;pointer-events:none;
+  background:linear-gradient(135deg,rgba(37,99,235,.08),rgba(124,58,237,.10))}
+.card .glyph{font-size:30px;margin-bottom:12px;display:block}
+
+.mini{display:flex;gap:16px}
+.mini .m{flex:1;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px;text-align:center;
+  box-shadow:0 8px 22px rgba(15,23,42,.05)}
+.mini .m .n{font-size:40px;font-weight:900;letter-spacing:-.03em;
+  background:var(--grad);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.mini .m .l{font-size:17px;color:var(--soft);margin-top:6px;line-height:1.35}
+
+.chips{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.chip{font-size:24px;font-weight:600;padding:10px 14px;border-radius:12px;background:rgba(37,99,235,.10);
+  color:#1e40af;border:1px solid rgba(37,99,235,.18)}
+.chip.alt{background:rgba(124,58,237,.10);color:#5b21b6;border-color:rgba(124,58,237,.20)}
+.chip.ghost{background:#fff;color:var(--soft);border:1px dashed var(--line);font-weight:500}
+
+.bar-row{display:flex;align-items:center;gap:18px;margin-bottom:14px}
+.bar-row .lbl{width:210px;font-size:20px;font-weight:600;color:var(--ink);text-align:right}
+.bar-track{flex:1;height:26px;border-radius:999px;background:#e8eefb;overflow:hidden;position:relative}
+.bar-fill{height:100%;width:0;border-radius:999px;background:var(--grad)}
+.bar-row .val{width:120px;font-size:19px;font-weight:700;color:var(--accent)}
+.bar-row.dim .bar-fill{background:linear-gradient(120deg,#94a3b8,#cbd5e1)}
+.bar-row.dim .val{color:var(--soft)}
+
+.window{background:var(--surface);border:2px solid rgba(37,99,235,.28);border-radius:18px;padding:18px;
+  box-shadow:0 14px 40px rgba(37,99,235,.10);position:relative}
+.window .wtitle{position:absolute;top:-13px;left:22px;background:var(--bg);padding:0 10px;
+  font-size:14px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}
+.seg{height:42px;border-radius:10px;margin-bottom:10px;display:flex;align-items:center;padding:0 16px;
+  font-size:18px;font-weight:600;color:#fff;width:0;overflow:hidden;white-space:nowrap}
+.seg:last-child{margin-bottom:0}
+.s1{background:#1e3a8a}.s2{background:#2563eb}.s3{background:#3b82f6}.s4{background:#7c3aed}.s5{background:#a78bfa}
+.overflow-tag{position:absolute;right:22px;bottom:14px;opacity:0;
+  font-size:17px;font-weight:800;color:#dc2626;background:#fee2e2;border:1px solid #fecaca;padding:8px 14px;border-radius:10px}
+
+.tl{position:relative;height:130px;margin:10px 10px 0}
+.tl .line{position:absolute;left:0;top:52px;height:4px;width:0;border-radius:4px;background:var(--grad)}
+.tl .pt{position:absolute;top:40px;width:150px;margin-left:-75px;text-align:center;opacity:0}
+.tl .dot{width:28px;height:28px;border-radius:50%;background:#fff;border:4px solid var(--accent);margin:0 auto}
+.tl .pt.key .dot{border-color:var(--violet);box-shadow:0 0 0 8px rgba(124,58,237,.16)}
+.tl .yr{font-size:20px;font-weight:800;color:var(--navy);margin-top:10px}
+.tl .cap{font-size:16px;color:var(--soft);margin-top:2px;white-space:nowrap}
+
+.orbit{position:relative;height:300px}
+.orbit .hub{position:absolute;left:50%;top:50%;margin:-66px 0 0 -66px;width:132px;height:132px;border-radius:50%;
+  background:var(--grad);color:#fff;display:flex;align-items:center;justify-content:center;
+  font-size:22px;font-weight:800;box-shadow:0 18px 50px rgba(37,99,235,.35);z-index:2}
+.orbit .node{position:absolute;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 16px;
+  box-shadow:0 10px 26px rgba(15,23,42,.08);opacity:0;z-index:2;min-width:210px}
+.orbit .node b{display:block;font-size:19px;color:var(--navy)}
+.orbit .node span{font-size:15px;color:var(--soft)}
+.orbit svg{position:absolute;inset:0;width:100%;height:100%;z-index:1}
+
+.cross{display:flex;flex-direction:column;gap:16px}
+.cross .c{display:flex;align-items:center;gap:16px;font-size:25px;color:#334155;
+  background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 20px}
+.cross .c i{font-style:normal;flex:0 0 34px;height:34px;border-radius:50%;background:#fee2e2;color:#dc2626;
+  display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px}
+.cross .c.ok i{background:#dcfce7;color:#16a34a}
+
+.steps3{display:flex;gap:18px}
+.steps3 .s{flex:1;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:22px;
+  box-shadow:0 10px 28px rgba(15,23,42,.06)}
+.steps3 .s .num{width:42px;height:42px;border-radius:12px;background:var(--grad);color:#fff;font-weight:900;font-size:21px;
+  display:flex;align-items:center;justify-content:center;margin-bottom:14px}
+.steps3 .s p{font-size:19px;line-height:1.45;color:#334155}
+
+.pred{display:flex;flex-direction:column;gap:12px;margin-top:10px}
+.pred .q{font-size:26px;color:var(--ink);font-weight:600}
+.pred .q u{text-decoration:none;border-bottom:3px dashed var(--violet);padding:0 30px;margin-left:6px}
+.pred .pr{display:flex;align-items:center;gap:14px}
+.pred .pr .w{width:180px;font-size:21px;font-weight:700;color:var(--navy);text-align:right}
+.pred .pr .t{flex:1;height:22px;background:#e8eefb;border-radius:999px;overflow:hidden}
+.pred .pr .f{height:100%;width:0;border-radius:999px;background:var(--grad)}
+.pred .pr .p{width:70px;font-size:18px;font-weight:700;color:var(--accent)}
+.pred .pr.low .f{background:linear-gradient(120deg,#fca5a5,#f87171)}
+.pred .pr.low .p{color:#dc2626}
+
+.actors{display:flex;gap:14px}
+.actors .a{flex:1;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px 16px;text-align:center;
+  box-shadow:0 10px 26px rgba(15,23,42,.06)}
+.actors .a .av{width:52px;height:52px;border-radius:14px;margin:0 auto 12px;display:flex;align-items:center;justify-content:center;
+  font-size:22px;font-weight:900;color:#fff;background:var(--grad)}
+.actors .a .nm{font-size:21px;font-weight:800;color:var(--navy)}
+.actors .a .co{font-size:15px;color:var(--soft);margin:2px 0 8px}
+.actors .a .de{font-size:16px;color:#334155;line-height:1.35}
+.actors .a.first .av{box-shadow:0 10px 26px rgba(37,99,235,.4)}
+
+.quote{border-left:5px solid transparent;border-image:var(--grad) 1;padding-left:26px}
+
+/* ---------- chrome ---------- */
+#progress{position:absolute;left:0;bottom:0;height:5px;width:0;background:var(--grad);z-index:8;border-radius:0 3px 3px 0}
+.footer{position:absolute;left:0;right:0;bottom:22px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 38px;font-size:14px;color:var(--soft);z-index:6;pointer-events:none}
+.footer .mod{display:flex;align-items:center;gap:10px}
+.footer .mod b{color:#334155;font-weight:700}
+.footer .cnt{font-variant-numeric:tabular-nums;font-weight:700;color:#334155;background:rgba(255,255,255,.75);
+  border:1px solid var(--line);border-radius:999px;padding:5px 14px;pointer-events:auto}
+.slide.lead ~ .footer{opacity:.6}
+
+#hint{position:absolute;left:50%;bottom:64px;transform:translateX(-50%);z-index:9;
+  background:rgba(15,23,42,.86);color:#e2e8f0;font-size:14px;padding:10px 18px;border-radius:999px;
+  display:flex;gap:16px;align-items:center;backdrop-filter:blur(8px)}
+#hint kbd{background:rgba(255,255,255,.16);border-radius:6px;padding:2px 7px;font-family:inherit;font-size:13px;font-weight:600}
+#help{position:absolute;inset:0;z-index:12;background:rgba(9,14,28,.82);backdrop-filter:blur(6px);
+  display:none;align-items:center;justify-content:center;color:#e2e8f0}
+#help.on{display:flex}
+#help .box{background:#111a2e;border:1px solid rgba(148,163,184,.25);border-radius:20px;padding:34px 40px;max-width:560px}
+#help h4{font-size:22px;margin-bottom:18px;color:#fff}
+#help .k{display:flex;justify-content:space-between;gap:24px;padding:9px 0;font-size:17px;border-bottom:1px solid rgba(148,163,184,.14)}
+#help .k:last-child{border:0}
+#help kbd{background:rgba(255,255,255,.12);border-radius:7px;padding:3px 10px;font-family:inherit;font-size:15px}
+@media (prefers-reduced-motion:reduce){.blob{display:none}}
+</style>
+</head>
+<body>
+<div id="viewport">
+  <div id="stage">
+    <div id="grid-bg"></div>
+    <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+    <div class="brand">
+      <svg viewBox="0 0 32 32" fill="none"><path d="M4 20 L14 10 L14 16 L26 6" stroke="url(#g)" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 6 L26 6 L26 12" stroke="url(#g)" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/><defs><linearGradient id="g" x1="0" y1="0" x2="32" y2="32"><stop stop-color="#2563eb"/><stop offset="1" stop-color="#7c3aed"/></linearGradient></defs></svg>
+      <span>the-shift<i>.ai</i></span>
+    </div>
+    <div id="deck">
+<!-- 1 --><section class="slide lead" data-title="Titre">
+  <h1>Comprendre l'IA<br>et le paysage Claude</h1>
+  <p class="sub step"><strong>Module 1</strong> — Parcours Opérateurs</p>
+  <p class="sub step" style="margin-top:2px">The Shift AI</p>
+  <div class="chips step" style="margin-top:34px;justify-content:center">
+    <span class="chip ghost">45 min</span><span class="chip ghost">exposé + TP</span><span class="chip ghost">démo animée</span>
+  </div>
+</section>
+
+<!-- 2 --><section class="slide">
+  <h2>Ce qu'on va voir</h2>
+  <p class="body step">Avant de toucher à l'outil, on pose les bases. Quatre étapes : ce qu'est un grand modèle de langage, la mécanique des tokens et du contexte, le paysage des outils en 2026, et ce que la loi vous autorise.</p>
+  <div class="schema step stagger" style="margin-top:14px">
+    <div class="row">
+      <div class="card"><span class="tag">Étape 1</span><div class="ttl">Le LLM</div><div class="txt">Ce qu'est un grand modèle de langage</div></div>
+      <div class="card"><span class="tag">Étape 2</span><div class="ttl">Tokens &amp; contexte</div><div class="txt">La mécanique interne</div></div>
+      <div class="card"><span class="tag">Étape 3</span><div class="ttl">Paysage 2026</div><div class="txt">Les outils du marché</div></div>
+      <div class="card"><span class="tag">Étape 4</span><div class="ttl">La loi</div><div class="txt">Ce qu'elle vous autorise</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 3 --><section class="slide lead" data-section="1">
+  <div class="kicker">Partie 1</div>
+  <h2>L'IA, c'est quoi ?</h2>
+</section>
+
+<!-- 4 --><section class="slide">
+  <h2>Pas une technologie</h2>
+  <p class="body big step">L'intelligence artificielle, ce n'est pas une seule technologie. C'est un <strong>mot parapluie</strong> qui recouvre plusieurs familles.</p>
+</section>
+
+<!-- 5 --><section class="slide">
+  <h2>Trois familles</h2>
+  <p class="body step">Trois comptent pour nous : l'IA classique, qui reconnaît des patterns ; l'IA de vision, qui lit les images ; et l'IA générative, qui crée du nouveau contenu.</p>
+  <div class="schema step" data-anim="familles">
+    <div class="row">
+      <div class="card fam"><span class="glyph">📊</span><div class="ttl">IA classique</div><div class="txt">Reconnaît des patterns</div></div>
+      <div class="card fam"><span class="glyph">👁️</span><div class="ttl">IA de vision</div><div class="txt">Lit les images</div></div>
+      <div class="card fam hl"><span class="glyph">✨</span><div class="ttl">IA générative</div><div class="txt">Crée du nouveau contenu</div></div>
+    </div>
+  </div>
+  <p class="body step" style="margin:0"><strong>C'est cette dernière qui nous intéresse.</strong></p>
+</section>
+
+<!-- 6 --><section class="slide">
+  <h2>L'IA classique ne crée rien</h2>
+  <p class="body big step">Elle <strong>classe</strong>, <strong>prédit</strong>, <strong>détecte</strong>. Et vous la croisez tous les jours sans y penser.</p>
+</section>
+
+<!-- 7 --><section class="slide">
+  <h2>Vous l'utilisez déjà</h2>
+  <div class="schema step stagger">
+    <div class="row">
+      <div class="card"><span class="glyph">📧</span><div class="ttl">Anti-spam</div><div class="txt">Le filtre de votre messagerie</div></div>
+      <div class="card"><span class="glyph">🎬</span><div class="ttl">Recommandations</div><div class="txt">Netflix, Spotify</div></div>
+      <div class="card"><span class="glyph">💳</span><div class="ttl">Détection de fraude</div><div class="txt">Sur votre carte bancaire</div></div>
+    </div>
+  </div>
+  <p class="body step" style="margin:0">Rien de magique : des <strong>statistiques</strong>, depuis les années 90.</p>
+</section>
+
+<!-- 8 --><section class="slide">
+  <h2>La bascule de 2022</h2>
+  <div class="schema step" data-anim="timeline">
+    <div class="tl">
+      <div class="line"></div>
+      <div class="pt" style="left:6%"><div class="dot"></div><div class="yr">1990s</div><div class="cap">statistiques</div></div>
+      <div class="pt" style="left:38%"><div class="dot"></div><div class="yr">2012</div><div class="cap">deep learning</div></div>
+      <div class="pt key" style="left:70%"><div class="dot"></div><div class="yr">2022</div><div class="cap">ChatGPT</div></div>
+      <div class="pt" style="left:94%"><div class="dot"></div><div class="yr">2026</div><div class="cap">aujourd'hui</div></div>
+    </div>
+  </div>
+  <p class="body step">Fin 2022, ChatGPT arrive, et tout le monde comprend que quelque chose a changé. L'IA ne se contente plus de reconnaître : <strong>elle génère</strong> du texte, des images, du code.</p>
+</section>
+
+<!-- 9 --><section class="slide">
+  <h2>Le moteur : le LLM</h2>
+  <p class="body big step">Pour le texte, ce moteur s'appelle un <strong>LLM</strong> — un grand modèle de langage. C'est tout le sujet de cette formation.</p>
+</section>
+
+<!-- 10 --><section class="slide lead">
+  <div class="kicker">Partie 2</div>
+  <h2>Un LLM, en clair</h2>
+</section>
+
+<!-- 11 --><section class="slide">
+  <h2>Une seule compétence</h2>
+  <p class="body big step">Un grand modèle de langage a été entraîné à faire une seule chose : <strong>deviner le mot suivant</strong>. Des milliards de fois. C'est tout.</p>
+</section>
+
+<!-- 12 --><section class="slide">
+  <h2>Il ne cherche pas, il génère</h2>
+  <p class="body step">Quand vous posez une question à Claude, il ne va pas chercher la réponse quelque part. Il génère la suite la plus probable de votre texte, mot après mot.</p>
+  <div class="schema step" data-anim="pred">
+    <div class="pred">
+      <div class="q">« Merci pour votre retour, je reviens vers vous <u></u> »</div>
+      <div class="pr" data-p="64"><div class="w">rapidement</div><div class="t"><div class="f"></div></div><div class="p">64 %</div></div>
+      <div class="pr" data-p="21"><div class="w">dès demain</div><div class="t"><div class="f"></div></div><div class="p">21 %</div></div>
+      <div class="pr" data-p="11"><div class="w">sous 48 h</div><div class="t"><div class="f"></div></div><div class="p">11 %</div></div>
+      <div class="pr low" data-p="3"><div class="w">en octobre</div><div class="t"><div class="f"></div></div><div class="p">3 %</div></div>
+    </div>
+  </div>
+  <p class="body step" style="margin:0">Une <em>autocomplétion</em> — mais d'une puissance inédite.</p>
+</section>
+
+<!-- 13 --><section class="slide">
+  <h2>Ses forces</h2>
+  <div class="schema step stagger">
+    <div class="row">
+      <div class="card"><span class="glyph">✉️</span><div class="ttl">L'email impeccable</div><div class="txt">Un schéma qu'il a vu des milliers de fois</div></div>
+      <div class="card"><span class="glyph">📄</span><div class="ttl">Cinquante pages</div><div class="txt">Résumées en dix lignes</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 14 --><section class="slide">
+  <h2>Son raté</h2>
+  <p class="body big step">Il peut aussi <strong>inventer un chiffre faux</strong> avec le plus grand aplomb.</p>
+  <p class="body step">Parce que la suite la plus <em>probable</em> n'est pas toujours la suite la plus <em>vraie</em>.</p>
+</section>
+
+<!-- 15 --><section class="slide lead">
+  <h2>L'hallucination</h2>
+  <p class="sub step">Quand le modèle invente un fait, ça porte un nom.</p>
+</section>
+
+<!-- 16 --><section class="slide">
+  <h2>Presque une légende</h2>
+  <p class="body step">En 2026, sur <strong>Claude 4.6</strong>, c'est devenu si rare que beaucoup d'utilisateurs n'en croisent plus jamais.</p>
+  <p class="body step">Au point que ça ressemble presque à une légende.</p>
+</section>
+
+<!-- 17 --><section class="slide">
+  <h2>Pourquoi c'est rare</h2>
+  <div class="schema step stagger">
+    <div class="row">
+      <div class="card"><span class="tag">Raison 1</span><div class="ttl">« Je ne sais pas »</div><div class="txt">Le modèle a appris à le dire plutôt qu'à inventer</div></div>
+      <div class="card"><span class="tag">Raison 2</span><div class="ttl">La recherche web</div><div class="txt">Elle ancre ses réponses sur de vraies sources</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 18 --><section class="slide">
+  <h2>Mais ce n'est pas une légende</h2>
+  <p class="body big step">Le risque n'a pas disparu. Il est <strong>structurel</strong> — lié à la façon même dont le modèle fonctionne.</p>
+</section>
+
+<!-- 19 --><section class="slide">
+  <h2>On la fait encore apparaître</h2>
+  <p class="body step">Coupez la recherche web, et forcez Claude à répondre sur un détail de niche — un chiffre non public, une citation obscure.</p>
+  <div class="chips step">
+    <span class="chip">recherche web coupée</span><span class="chip alt">chiffre non public</span><span class="chip alt">citation obscure</span>
+  </div>
+  <p class="body step" style="margin-top:22px">C'est exactement là que ça arrive.</p>
+</section>
+
+<!-- 20 --><section class="slide lead">
+  <div class="kicker">La règle qui ne bouge pas</div>
+  <div class="punch step" data-anim="rule">L'IA accélère.<br>Vous validez.</div>
+</section>
+
+<!-- 21 --><section class="slide">
+  <h2>Ce que Claude n'a pas</h2>
+  <div class="schema step stagger">
+    <div class="cross">
+      <div class="c"><i>✕</i>Pas de compréhension au sens humain</div>
+      <div class="c"><i>✕</i>Pas d'intention</div>
+      <div class="c"><i>✕</i>Pas de mémoire d'une conversation à l'autre</div>
+    </div>
+  </div>
+</section>
+
+<!-- 22 --><section class="slide">
+  <h2>Juste des tokens</h2>
+  <p class="body big step">Il n'a pas « lu » votre question comme vous me lisez là. Il a reçu <strong>une suite de tokens</strong>, et il en a produit une autre.</p>
+</section>
+
+<!-- 23 --><section class="slide lead">
+  <div class="kicker">Partie 3</div>
+  <h2>Tokens et fenêtre de contexte</h2>
+</section>
+
+<!-- 24 --><section class="slide">
+  <h2>Le token</h2>
+  <p class="body step">Tout ce que manipule Claude est découpé en tokens. Ni une lettre, ni un mot : <strong>un petit morceau de texte</strong>.</p>
+  <div class="schema step" data-anim="tokenize">
+    <div class="chips" id="tokchips">
+      <span class="chip">Claude</span><span class="chip alt">dé</span><span class="chip">coupe</span><span class="chip alt">votre</span><span class="chip">texte</span><span class="chip alt">en</span><span class="chip">to</span><span class="chip alt">kens</span><span class="chip">.</span>
+    </div>
+  </div>
+</section>
+
+<!-- 25 --><section class="slide">
+  <h2>Les ordres de grandeur</h2>
+  <div class="schema step" data-anim="counters">
+    <div class="mini">
+      <div class="m"><div class="n" data-count="4" data-suffix=" car.">0</div><div class="l">un token ≈ quatre caractères,<br>les trois quarts d'un mot</div></div>
+      <div class="m"><div class="n" data-count="500">0</div><div class="l">tokens ≈ une page A4</div></div>
+      <div class="m"><div class="n" data-count="150000">0</div><div class="l">tokens ≈ un roman<br>de trois cents pages</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 26 --><section class="slide">
+  <h2>La fenêtre de contexte</h2>
+  <p class="body step">Tout ce que Claude garde sous les yeux <strong>en même temps</strong>.</p>
+  <div class="schema step" data-anim="ctx">
+    <div class="window">
+      <span class="wtitle">Fenêtre de contexte</span>
+      <div class="seg s1" data-w="96">Les instructions du système</div>
+      <div class="seg s2" data-w="78">Vos consignes</div>
+      <div class="seg s3" data-w="62">Les fichiers joints</div>
+      <div class="seg s4" data-w="45">L'historique de la conversation</div>
+      <div class="seg s5" data-w="28">La réponse en cours</div>
+    </div>
+  </div>
+</section>
+
+<!-- 27 --><section class="slide">
+  <h2>Ce qui déborde disparaît</h2>
+  <div class="schema step" data-anim="overflow">
+    <div class="window" style="position:relative">
+      <span class="wtitle">Fenêtre pleine</span>
+      <div class="seg s1" data-w="100">Instructions</div>
+      <div class="seg s2" data-w="100">Consignes + fichiers</div>
+      <div class="seg s3" data-w="100">Historique récent</div>
+      <div class="seg s5 out" data-w="100">Début de la conversation</div>
+      <span class="overflow-tag">↯ hors fenêtre : oublié</span>
+    </div>
+  </div>
+  <p class="body step" style="margin:0">Le point crucial : tout ce qui sort de la fenêtre <strong>cesse d'exister</strong> pour lui.</p>
+</section>
+
+<!-- 28 --><section class="slide">
+  <h2>Des fenêtres énormes</h2>
+  <div class="schema step" data-anim="sizes">
+    <div class="bar-row"><div class="lbl">Sonnet 4.6 · Opus 4.6</div><div class="bar-track"><div class="bar-fill" data-w="100"></div></div><div class="val">1 000 000</div></div>
+    <div class="bar-row dim"><div class="lbl">Haiku 4.5 — le rapide</div><div class="bar-track"><div class="bar-fill" data-w="20"></div></div><div class="val">200 000</div></div>
+  </div>
+  <p class="body step" style="margin:0">Un million de tokens : <strong>un dossier d'appel d'offres entier</strong>.</p>
+</section>
+
+<!-- 29 --><section class="slide">
+  <h2>Mais pas n'importe comment</h2>
+  <p class="body step">Plus vous remplissez la fenêtre, plus Claude est <strong>lent</strong>, et plus son <strong>attention se dilue</strong>.</p>
+  <p class="body step">L'abondance n'invite pas à tout y déverser.</p>
+</section>
+
+<!-- 30 --><section class="slide">
+  <div class="kicker">Réflexe 1</div>
+  <h2>Repartir à zéro</h2>
+  <p class="body step">Repartez d'une nouvelle conversation quand vous changez de sujet. Inutile de traîner trois semaines de contexte devenu mort.</p>
+</section>
+
+<!-- 31 --><section class="slide">
+  <div class="kicker">Réflexe 2</div>
+  <h2>Les Projects</h2>
+  <p class="body step">Pour les sujets récurrents, utilisez les Projects : ils gardent vos <strong>instructions</strong> et vos <strong>fichiers</strong>. On les voit au module 2.</p>
+</section>
+
+<!-- 32 --><section class="slide">
+  <div class="kicker">Réflexe 3</div>
+  <h2>Les Skills</h2>
+  <p class="body step">Les Skills ne se chargent que <strong>quand c'est utile</strong> — module 9.</p>
+  <div class="chips step" style="margin-top:10px">
+    <span class="chip">Token</span><span class="chip">Contexte</span><span class="chip alt">Projects</span><span class="chip alt">Skills</span>
+  </div>
+  <p class="body step" style="margin-top:22px">Ces quatre mots reviendront tout le parcours.</p>
+</section>
+
+<!-- 33 --><section class="slide">
+  <h2>Entraînement…</h2>
+  <p class="body big step">C'est quand Anthropic construit le modèle : <strong>long</strong>, <strong>cher</strong>, et figé avant même que vous ouvriez Claude.</p>
+</section>
+
+<!-- 34 --><section class="slide">
+  <h2>…et inférence</h2>
+  <p class="body step">C'est ce qui se passe <strong>à chaque message</strong>, quand le modèle tourne pour répondre.</p>
+  <div class="schema step stagger">
+    <div class="cross">
+      <div class="c ok"><i>✓</i>Claude ne retient rien d'une fois sur l'autre</div>
+      <div class="c ok"><i>✓</i>Vos échanges ne ressortent pas chez le voisin</div>
+    </div>
+  </div>
+</section>
+
+<!-- 35 --><section class="slide lead">
+  <div class="kicker">Partie 4</div>
+  <h2>Le paysage 2026</h2>
+</section>
+
+<!-- 36 --><section class="slide">
+  <h2>Claude n'est pas seul</h2>
+  <p class="body big step">Cinq noms à connaître sur le marché.</p>
+</section>
+
+<!-- 37 --><section class="slide">
+  <h2>Les cinq acteurs</h2>
+  <div class="schema step" data-anim="actors">
+    <div class="actors">
+      <div class="a first"><div class="av">C</div><div class="nm">Claude</div><div class="co">Anthropic</div><div class="de">L'analyse de documents</div></div>
+      <div class="a"><div class="av">G</div><div class="nm">ChatGPT</div><div class="co">OpenAI</div><div class="de">Le plus polyvalent</div></div>
+      <div class="a"><div class="av">✦</div><div class="nm">Gemini</div><div class="co">Google</div><div class="de">Intégré à Workspace</div></div>
+      <div class="a"><div class="av">⧉</div><div class="nm">Copilot</div><div class="co">Microsoft</div><div class="de">L'IA dans Office</div></div>
+      <div class="a"><div class="av">M</div><div class="nm">Mistral</div><div class="co">France</div><div class="de">L'hébergement européen</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 38 --><section class="slide">
+  <h2>Pourquoi Claude au centre</h2>
+  <p class="body big step">On a bâti cette formation autour de Claude pour son <strong>écosystème</strong> — le plus complet en 2026. Quatre briques qu'on va explorer.</p>
+</section>
+
+<!-- 39 --><section class="slide">
+  <h2>Les quatre briques</h2>
+  <div class="schema step" data-anim="orbit">
+    <div class="orbit">
+      <svg viewBox="0 0 1096 300" preserveAspectRatio="none">
+        <line x1="548" y1="150" x2="150" y2="46" stroke="#c7d6f7" stroke-width="2"/>
+        <line x1="548" y1="150" x2="946" y2="46" stroke="#c7d6f7" stroke-width="2"/>
+        <line x1="548" y1="150" x2="150" y2="254" stroke="#c7d6f7" stroke-width="2"/>
+        <line x1="548" y1="150" x2="946" y2="254" stroke="#c7d6f7" stroke-width="2"/>
+      </svg>
+      <div class="hub">Claude</div>
+      <div class="node" style="left:2%;top:4%"><b>Cowork</b><span>Les tâches longues — module 8</span></div>
+      <div class="node" style="right:2%;top:4%"><b>Agent Skills</b><span>L'expertise prête à l'emploi — module 9</span></div>
+      <div class="node" style="left:2%;bottom:4%"><b>Extension Chrome</b><span>Claude dans le navigateur — module 4</span></div>
+      <div class="node" style="right:2%;bottom:4%"><b>Add-ins Office</b><span>Excel, Word, PowerPoint — modules 5 à 7</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- 40 --><section class="slide lead">
+  <div class="kicker">Partie 5</div>
+  <h2>Vos données et la loi</h2>
+</section>
+
+<!-- 41 --><section class="slide">
+  <h2>L'AI Act européen</h2>
+  <p class="body big step">Premier cadre légal au monde sur l'IA, il s'applique <strong>par étapes</strong>. Trois choses à retenir.</p>
+</section>
+
+<!-- 42 --><section class="slide">
+  <div class="kicker">À retenir 1</div>
+  <h2>Obligation de compétence</h2>
+  <p class="body step">Utiliser l'IA au travail suppose de <strong>savoir ce qu'on fait</strong>. C'est l'objet même de cette journée.</p>
+</section>
+
+<!-- 43 --><section class="slide">
+  <div class="kicker">À retenir 2 &amp; 3</div>
+  <h2>Transparence et sanctions</h2>
+  <p class="body step">Selon le contexte, un contenu généré doit être <strong>signalé comme tel</strong>.</p>
+  <p class="body step">Et les sanctions deviennent lourdes à partir d'<strong>août 2026</strong>.</p>
+</section>
+
+<!-- 44 --><section class="slide">
+  <h2>RGPD — le principe</h2>
+  <p class="body big step">Du bon sens, renforcé par la loi : n'envoyez pas de <strong>données personnelles sensibles</strong> sans l'accord des personnes concernées.</p>
+</section>
+
+<!-- 45 --><section class="slide">
+  <h2>Vos conversations</h2>
+  <div class="schema step stagger">
+    <div class="row">
+      <div class="card"><span class="tag">Team · Enterprise · API</span><div class="ttl">Jamais d'entraînement</div><div class="txt">Sur les plans pro, vos conversations ne servent jamais à entraîner le modèle</div></div>
+      <div class="card"><span class="tag">Free · Pro · Max</span><div class="ttl">Seulement si vous l'autorisez</div><div class="txt">Le choix vous revient, dans les réglages</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 46 --><section class="slide">
+  <h2>Dans le doute</h2>
+  <p class="body big step">Anonymisez avant d'envoyer : <strong>des initiales</strong> à la place des noms.</p>
+  <div class="chips step" style="margin-top:14px">
+    <span class="chip ghost">Marie Dupont, 12 rue…</span><span class="chip" style="font-weight:800">→</span><span class="chip alt">M. D., [adresse]</span>
+  </div>
+</section>
+
+<!-- 47 --><section class="slide lead">
+  <div class="kicker">Travaux pratiques</div>
+  <h2>Premier contact</h2>
+  <p class="sub step">20 minutes · claude.ai</p>
+</section>
+
+<!-- 48 --><section class="slide">
+  <h2>La consigne</h2>
+  <p class="body big step">À vous de jouer, vingt minutes. Ouvrez <strong>claude.ai</strong>, et dans une seule conversation, faites trois choses.</p>
+</section>
+
+<!-- 49 --><section class="slide">
+  <h2>Les trois étapes</h2>
+  <div class="schema step" data-anim="tp">
+    <div class="steps3">
+      <div class="s"><div class="num">1</div><p>Collez un email pro <strong>anonymisé</strong>, demandez un résumé en trois points.</p></div>
+      <div class="s"><div class="num">2</div><p>Demandez à Claude <strong>combien de tokens</strong> faisait votre message.</p></div>
+      <div class="s"><div class="num">3</div><p>Chargez un PDF de cinq à dix pages, demandez s'il <strong>tient dans sa fenêtre</strong>.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 50 --><section class="slide">
+  <h2>Votre trace</h2>
+  <p class="body big step">Notez ce que vous observez à chaque étape. Ce compte-rendu, c'est votre <strong>trace individuelle</strong> de la séance.</p>
+</section>
+
+<!-- 51 --><section class="slide lead">
+  <h2>À retenir</h2>
+</section>
+
+<!-- 52 --><section class="slide">
+  <h2>Les quatre idées</h2>
+  <ul class="bullets">
+    <li class="step">Un LLM <strong>génère</strong>, il ne cherche pas</li>
+    <li class="step">L'hallucination est rare mais <strong>réelle</strong> → vous validez</li>
+    <li class="step">Tout passe par des <strong>tokens</strong>, dans une <strong>fenêtre</strong> limitée</li>
+    <li class="step">Claude, on l'a choisi pour son <strong>écosystème</strong></li>
+  </ul>
+</section>
+
+<!-- 53 --><section class="slide lead">
+  <div class="kicker">La suite</div>
+  <h2>Module 2 — Prendre en main Claude Desktop</h2>
+  <p class="sub step">On quitte la théorie, on ouvre l'outil.</p>
+</section>
+    </div><!-- /deck -->
+
+    <div class="footer">
+      <div class="mod"><b>M1</b> · Comprendre l'IA et le paysage Claude</div>
+      <div class="cnt"><span id="cur">1</span> / <span id="tot">53</span></div>
+    </div>
+    <div id="progress"></div>
+
+    <div id="hint">
+      <span><kbd>→</kbd> <kbd>espace</kbd> ou clic — suivant</span>
+      <span><kbd>←</kbd> retour</span>
+      <span><kbd>F</kbd> plein écran</span>
+      <span><kbd>?</kbd> aide</span>
+    </div>
+
+    <div id="help">
+      <div class="box">
+        <h4>Navigation</h4>
+        <div class="k"><span>Élément / slide suivant</span><span><kbd>→</kbd> <kbd>espace</kbd> <kbd>clic</kbd> <kbd>swipe ←</kbd></span></div>
+        <div class="k"><span>Retour</span><span><kbd>←</kbd> <kbd>swipe →</kbd></span></div>
+        <div class="k"><span>Plein écran</span><span><kbd>F</kbd></span></div>
+        <div class="k"><span>Première / dernière slide</span><span><kbd>Début</kbd> <kbd>Fin</kbd></span></div>
+        <div class="k"><span>Tout révéler sur la slide</span><span><kbd>A</kbd></span></div>
+        <div class="k"><span>Fermer cette aide</span><span><kbd>Échap</kbd></span></div>
+      </div>
+    </div>
+  </div><!-- /stage -->
+</div><!-- /viewport -->
+
+<script src="vendor/anime.min.js"></script>
+<script>
+(function(){
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var stage = document.getElementById('stage');
+  var deck  = document.getElementById('deck');
+  var slides= Array.prototype.slice.call(deck.querySelectorAll('.slide'));
+  var hint  = document.getElementById('hint');
+  var help  = document.getElementById('help');
+  var bar   = document.getElementById('progress');
+  var cur   = document.getElementById('cur');
+  document.getElementById('tot').textContent = slides.length;
+
+  slides.forEach(function(s){ s._steps = Array.prototype.slice.call(s.querySelectorAll('.step')); });
+
+  var si = 0, ki = 0, busy = false;
+
+  /* ---------- mise à l'échelle de la scène 16:9 ---------- */
+  function fit(){
+    var pad = document.fullscreenElement ? 0 : 28;
+    var s = Math.min((innerWidth - pad*2)/1280, (innerHeight - pad*2)/720);
+    stage.style.transform = 'translate(-50%,-50%) scale(' + s + ')';
+  }
+  addEventListener('resize', fit); document.addEventListener('fullscreenchange', fit); fit();
+
+  /* ---------- décor vivant ---------- */
+  if(!reduce){
+    anime({targets:'.blob.b1', translateX:[0,60], translateY:[0,40], duration:14000, direction:'alternate', loop:true, easing:'easeInOutSine'});
+    anime({targets:'.blob.b2', translateX:[0,-70], translateY:[0,-30], duration:17000, direction:'alternate', loop:true, easing:'easeInOutSine'});
+    anime({targets:'.blob.b3', scale:[1,1.25], duration:11000, direction:'alternate', loop:true, easing:'easeInOutSine'});
+  }
+
+  /* ---------- schémas animés ---------- */
+  var ANIM = {
+    familles: function(el){
+      anime({targets: el.querySelectorAll('.fam'), opacity:[0,1], translateY:[30,0], scale:[.94,1], delay:anime.stagger(140), duration:700, easing:'easeOutExpo'});
+      anime({targets: el.querySelector('.hl'), scale:[1,1.035], delay:900, duration:900, direction:'alternate', loop:3, easing:'easeInOutQuad'});
+    },
+    timeline: function(el){
+      anime({targets: el.querySelector('.line'), width:['0%','100%'], duration:1100, easing:'easeInOutQuart'});
+      anime({targets: el.querySelectorAll('.pt'), opacity:[0,1], translateY:[14,0], delay:anime.stagger(230, {start:180}), duration:520, easing:'easeOutBack'});
+      anime({targets: el.querySelector('.pt.key .dot'), scale:[1,1.35], delay:1000, duration:700, direction:'alternate', loop:4, easing:'easeInOutQuad'});
+    },
+    pred: function(el){
+      anime({targets: el.querySelectorAll('.pr'), opacity:[0,1], translateX:[-18,0], delay:anime.stagger(120, {start:300}), duration:450, easing:'easeOutQuad'});
+      Array.prototype.forEach.call(el.querySelectorAll('.pr'), function(pr,i){
+        anime({targets: pr.querySelector('.f'), width:['0%', pr.dataset.p + '%'], delay:420 + i*120, duration:900, easing:'easeOutExpo'});
+      });
+      anime({targets: el.querySelector('.q u'), borderBottomColor:['#7c3aed','#2563eb'], duration:600, direction:'alternate', loop:6, easing:'easeInOutQuad'});
+    },
+    tokenize: function(el){
+      anime({targets: el.querySelectorAll('.chip'), opacity:[0,1], scale:[.6,1], rotate:[function(){return anime.random(-14,14);},0],
+             delay:anime.stagger(70), duration:620, easing:'easeOutBack'});
+    },
+    counters: function(el){
+      anime({targets: el.querySelectorAll('.m'), opacity:[0,1], translateY:[26,0], delay:anime.stagger(150), duration:620, easing:'easeOutExpo'});
+      Array.prototype.forEach.call(el.querySelectorAll('[data-count]'), function(node,i){
+        var end = parseInt(node.dataset.count,10), sfx = node.dataset.suffix || '', o = {v:0};
+        anime({targets:o, v:end, round:1, duration:1400, delay:200 + i*150, easing:'easeOutExpo',
+          update:function(){ node.textContent = o.v.toLocaleString('fr-FR') + sfx; }});
+      });
+    },
+    ctx: function(el){
+      anime({targets: el.querySelectorAll('.seg'), width:function(t){return t.dataset.w + '%';}, opacity:[0,1],
+             delay:anime.stagger(150), duration:820, easing:'easeOutExpo'});
+    },
+    overflow: function(el){
+      anime({targets: el.querySelectorAll('.seg'), width:function(t){return t.dataset.w + '%';}, opacity:[0,1],
+             delay:anime.stagger(110), duration:620, easing:'easeOutExpo'});
+      var out = el.querySelector('.seg.out');
+      anime({targets: out, translateX:[0,460], opacity:[1,0], rotate:[0,5], delay:1200, duration:1000, easing:'easeInCubic'});
+      anime({targets: el.querySelector('.overflow-tag'), opacity:[0,1], delay:1500, duration:400, easing:'easeOutQuad'});
+    },
+    sizes: function(el){
+      anime({targets: el.querySelectorAll('.bar-row'), opacity:[0,1], translateX:[-20,0], delay:anime.stagger(160), duration:500, easing:'easeOutQuad'});
+      anime({targets: el.querySelectorAll('.bar-fill'), width:function(t){return t.dataset.w + '%';}, delay:anime.stagger(220,{start:220}), duration:1100, easing:'easeOutExpo'});
+    },
+    actors: function(el){
+      anime({targets: el.querySelectorAll('.a'), opacity:[0,1], translateY:[34,0], scale:[.92,1], delay:anime.stagger(110), duration:680, easing:'easeOutBack'});
+      anime({targets: el.querySelector('.a.first .av'), scale:[1,1.12], delay:900, duration:800, direction:'alternate', loop:3, easing:'easeInOutQuad'});
+    },
+    orbit: function(el){
+      anime({targets: el.querySelector('.hub'), scale:[0,1], rotate:[-25,0], duration:800, easing:'easeOutBack'});
+      anime({targets: el.querySelectorAll('svg line'), strokeDashoffset:[anime.setDashoffset,0], delay:anime.stagger(120,{start:350}), duration:700, easing:'easeOutQuad'});
+      anime({targets: el.querySelectorAll('.node'), opacity:[0,1], scale:[.88,1], delay:anime.stagger(140,{start:700}), duration:600, easing:'easeOutBack'});
+    },
+    tp: function(el){
+      anime({targets: el.querySelectorAll('.s'), opacity:[0,1], translateY:[40,0], delay:anime.stagger(170), duration:700, easing:'easeOutExpo'});
+      anime({targets: el.querySelectorAll('.num'), rotate:[-90,0], scale:[.4,1], delay:anime.stagger(170,{start:120}), duration:700, easing:'easeOutBack'});
+    },
+    rule: function(el){
+      anime({targets: el, scale:[.9,1], opacity:[0,1], duration:900, easing:'easeOutExpo'});
+    }
+  };
+
+  function runAnim(el, instant){
+    var name = el.getAttribute('data-anim'); if(!name || !ANIM[name]) return;
+    if(instant || reduce){
+      /* état final immédiat */
+      Array.prototype.forEach.call(el.querySelectorAll('.seg,.bar-fill,.f'), function(n){ if(n.dataset.w) n.style.width=n.dataset.w+'%'; });
+      Array.prototype.forEach.call(el.querySelectorAll('.pr'), function(p){ p.querySelector('.f').style.width=p.dataset.p+'%'; });
+      Array.prototype.forEach.call(el.querySelectorAll('.pt,.node,.a,.m,.s,.fam,.chip,.pr,.bar-row'), function(n){ n.style.opacity=1; n.style.transform='none'; });
+      var hb = el.querySelector('.hub'); if(hb){ hb.style.opacity=1; hb.style.transform='scale(1)'; }
+      var ln = el.querySelector('.line'); if(ln) ln.style.width='100%';
+      Array.prototype.forEach.call(el.querySelectorAll('[data-count]'), function(n){
+        n.textContent = parseInt(n.dataset.count,10).toLocaleString('fr-FR') + (n.dataset.suffix||''); });
+      return;
+    }
+    ANIM[name](el);
+  }
+
+  function resetAnim(el){
+    var name = el.getAttribute('data-anim'); if(!name) return;
+    anime.remove(el.querySelectorAll('*'));
+    Array.prototype.forEach.call(el.querySelectorAll('.seg,.bar-fill,.f,.line'), function(n){ n.style.width='0'; n.style.opacity=''; n.style.transform=''; });
+    Array.prototype.forEach.call(el.querySelectorAll('.pt,.node,.a,.m,.s,.fam,.chip,.pr,.bar-row,.hub,.overflow-tag'), function(n){ n.style.opacity=''; n.style.transform=''; });
+    Array.prototype.forEach.call(el.querySelectorAll('[data-count]'), function(n){ n.textContent='0'; });
+  }
+
+  /* ---------- révélation des éléments ---------- */
+  function stagTargets(el){
+    if(el.classList.contains('chips')) return el.children;
+    if(el.classList.contains('stagger') && el.firstElementChild) return el.firstElementChild.children;
+    return null;
+  }
+  function showStep(el, instant){
+    el.classList.add('on');
+    if(instant || reduce){
+      el.style.opacity = 1; el.style.transform = 'none';
+      var k = stagTargets(el); if(k) Array.prototype.forEach.call(k, function(n){ n.style.opacity=1; n.style.transform='none'; });
+      runAnim(el, true); return;
+    }
+    var kids = stagTargets(el);
+    if(kids && kids.length){
+      el.style.opacity = 1;
+      anime({targets:kids, opacity:[0,1], translateY:[26,0], scale:[.96,1], delay:anime.stagger(95), duration:640, easing:'easeOutExpo'});
+    } else {
+      anime({targets:el, opacity:[0,1], translateY:[22,0], duration:560, easing:'easeOutExpo'});
+    }
+    runAnim(el, false);
+  }
+  function hideStep(el){
+    anime.remove(el); el.classList.remove('on');
+    el.style.opacity = 0; el.style.transform = '';
+    var k = stagTargets(el); if(k) Array.prototype.forEach.call(k, function(n){ anime.remove(n); n.style.opacity=''; n.style.transform=''; });
+    resetAnim(el);
+  }
+
+  /* ---------- transitions de slide ---------- */
+  function enter(slide, dir, allSteps){
+    slide.classList.add('active');
+    slide._steps.forEach(hideStep);
+    var head = slide.querySelectorAll('h1,h2,.kicker,ul.bullets');
+    if(reduce){
+      slide.style.opacity = 1; slide.style.transform = 'none';
+    } else {
+      anime({targets:slide, opacity:[0,1], translateX:[dir*70,0], scale:[.985,1], duration:520, easing:'easeOutExpo'});
+      anime({targets:head, opacity:[0,1], translateY:[26,0], delay:anime.stagger(80,{start:90}), duration:620, easing:'easeOutExpo'});
+    }
+    if(allSteps){ slide._steps.forEach(function(s){ showStep(s,true); }); ki = slide._steps.length; }
+    else { ki = 0; }
+  }
+  function leave(slide, dir, done){
+    if(reduce){ slide.classList.remove('active'); slide.style.opacity=0; done(); return; }
+    anime({targets:slide, opacity:[1,0], translateX:[0,-dir*70], scale:[1,.985], duration:360, easing:'easeInQuad',
+      complete:function(){ slide.classList.remove('active'); slide.style.opacity=0; slide.style.transform=''; done(); }});
+  }
+  function goTo(n, opts){
+    opts = opts || {};
+    if(busy || n<0 || n>=slides.length || n===si) return;
+    busy = true;
+    var dir = n > si ? 1 : -1, old = slides[si];
+    si = n; sync();
+    leave(old, dir, function(){
+      enter(slides[si], dir, opts.allSteps);
+      busy = false;
+    });
+  }
+  function sync(){
+    cur.textContent = si + 1;
+    anime({targets:bar, width:((si+1)/slides.length*100)+'%', duration:420, easing:'easeOutQuad'});
+    if(history.replaceState) history.replaceState(null,'','#'+(si+1));
+  }
+
+  function next(){
+    var s = slides[si];
+    if(ki < s._steps.length){ showStep(s._steps[ki]); ki++; return; }
+    goTo(si+1);
+  }
+  function prev(){
+    var s = slides[si];
+    if(ki > 0 && !busy){ ki--; hideStep(s._steps[ki]); return; }
+    goTo(si-1, {allSteps:true});
+  }
+  function revealAll(){
+    var s = slides[si];
+    while(ki < s._steps.length){ showStep(s._steps[ki], true); ki++; }
+  }
+
+  /* ---------- entrées ---------- */
+  var dismissed = false;
+  function dismissHint(){ if(dismissed) return; dismissed = true; anime({targets:hint, opacity:0, duration:400, easing:'easeInQuad', complete:function(){ hint.style.display='none'; }}); }
+  setTimeout(dismissHint, 9000);
+
+  addEventListener('keydown', function(e){
+    if(help.classList.contains('on')){ if(e.key==='Escape'||e.key==='?'||e.key==='h'){ help.classList.remove('on'); } return; }
+    switch(e.key){
+      case 'ArrowRight': case 'ArrowDown': case ' ': case 'PageDown': case 'Enter': e.preventDefault(); dismissHint(); next(); break;
+      case 'ArrowLeft': case 'ArrowUp': case 'PageUp': case 'Backspace': e.preventDefault(); dismissHint(); prev(); break;
+      case 'Home': e.preventDefault(); goTo(0); break;
+      case 'End': e.preventDefault(); goTo(slides.length-1, {allSteps:true}); break;
+      case 'a': case 'A': revealAll(); break;
+      case 'f': case 'F': toggleFs(); break;
+      case '?': case 'h': help.classList.add('on'); break;
+    }
+  });
+  function toggleFs(){
+    if(document.fullscreenElement) document.exitFullscreen();
+    else document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
+  }
+  help.addEventListener('click', function(){ help.classList.remove('on'); });
+
+  addEventListener('click', function(e){
+    if(help.classList.contains('on')) return;
+    dismissHint();
+    if(e.clientX < innerWidth*0.12) prev(); else next();
+  });
+  addEventListener('contextmenu', function(e){ e.preventDefault(); prev(); });
+
+  var tx=0, ty=0, tt=0;
+  addEventListener('touchstart', function(e){ tx=e.changedTouches[0].clientX; ty=e.changedTouches[0].clientY; tt=Date.now(); }, {passive:true});
+  addEventListener('touchend', function(e){
+    var dx=e.changedTouches[0].clientX-tx, dy=e.changedTouches[0].clientY-ty;
+    if(Date.now()-tt < 700 && Math.abs(dx) > 55 && Math.abs(dx) > Math.abs(dy)){ dismissHint(); dx<0 ? next() : prev(); }
+  }, {passive:true});
+
+  /* lien profond : #12 saute à la slide 12, même sans rechargement */
+  addEventListener('hashchange', function(){
+    var n = (parseInt(location.hash.slice(1),10)||1) - 1;
+    if(n !== si && n >= 0 && n < slides.length) goTo(n, {allSteps:false});
+  });
+
+  /* ---------- démarrage ---------- */
+  var start = Math.max(0, Math.min(slides.length-1, (parseInt(location.hash.slice(1),10)||1) - 1));
+  si = start; sync();
+  slides[si].classList.add('active');
+  slides[si]._steps.forEach(hideStep);
+  anime({targets:slides[si], opacity:[0,1], scale:[.97,1], duration:700, easing:'easeOutExpo'});
+  anime({targets:slides[si].querySelectorAll('h1,h2,.kicker'), opacity:[0,1], translateY:[30,0], delay:anime.stagger(110,{start:150}), duration:800, easing:'easeOutExpo'});
+})();
+</script>
+</body>
+</html>
